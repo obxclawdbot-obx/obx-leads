@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  hashedPassword String?
+  plan           String    @default("starter")
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  accounts       Account[]
+  sessions       Session[]
+  lists          List[]
+  savedSearches  SavedSearch[]
+  exportLogs     ExportLog[]
+  activityLogs   ActivityLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Company {
+  id              String   @id @default(cuid())
+  cif             String   @unique
+  name            String
+  legalForm       String?
+  foundedYear     Int?
+  address         String?
+  postalCode      String?
+  city            String?
+  provincia       String?
+  ccaa            String?
+  cnaeCode        String?
+  cnaeDescription String?
+  employees       Int?
+  revenue         Float?
+  phone           String?
+  email           String?
+  website         String?
+  linkedinUrl     String?
+  twitterUrl      String?
+  techStack       String?  // JSON string
+  bormeData       String?  // JSON string
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  listCompanies   ListCompany[]
+}
+
+model List {
+  id        String        @id @default(cuid())
+  name      String
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companies ListCompany[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ListCompany {
+  id        String   @id @default(cuid())
+  listId    String
+  companyId String
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+
+  @@unique([listId, companyId])
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  name      String
+  filters   String   // JSON string
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model ExportLog {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // "search" | "list"
+  count     Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  metadata  String?  // JSON string
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
   ])
 
   // Log activity
-  const userId = (session.user as { id?: string }).id
+  const userId = (session as { id?: string }).id
   if (userId) {
     await prisma.activityLog.create({
       data: { userId, action: 'search', metadata: JSON.stringify({ query, provincia, ccaa, cnae }) },

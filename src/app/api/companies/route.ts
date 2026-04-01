@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
@@ -13,7 +12,7 @@ export async function GET(req: Request) {
   const query = searchParams.get('query') || searchParams.get('q') || ''
   const provincia = searchParams.get('provincia') || ''
   const ccaa = searchParams.get('ccaa') || ''
-  const cnae = searchParams.get('cnae') || ''
+  const cnae = searchParams.get('cnae') || searchParams.get('cnaeCode') || ''
   const minEmployees = searchParams.get('minEmployees') || ''
   const maxEmployees = searchParams.get('maxEmployees') || ''
   const minRevenue = searchParams.get('minRevenue') || ''
@@ -21,39 +20,68 @@ export async function GET(req: Request) {
   const minYear = searchParams.get('minYear') || ''
   const maxYear = searchParams.get('maxYear') || ''
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '10')
+  const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
   const skip = (page - 1) * limit
 
-  const where: any = {}
+  // Build AND conditions
+  const andConditions: Record<string, unknown>[] = []
 
   if (query) {
-    where.OR = [
-      { name: { contains: query } },
-      { cif: { contains: query } },
-      { city: { contains: query } },
-    ]
-  }
-  if (provincia) where.provincia = { contains: provincia }
-  if (ccaa) where.ccaa = { contains: ccaa }
-  if (cnae) where.cnaeDescription = { contains: cnae }
-  if (minEmployees) where.employees = { ...where.employees, gte: parseInt(minEmployees) }
-  if (maxEmployees) where.employees = { ...where.employees, lte: parseInt(maxEmployees) }
-  if (minRevenue) where.revenue = { ...where.revenue, gte: parseFloat(minRevenue) }
-  if (maxRevenue) where.revenue = { ...where.revenue, lte: parseFloat(maxRevenue) }
-  if (minYear) where.foundedYear = { ...where.foundedYear, gte: parseInt(minYear) }
-  if (maxYear) where.foundedYear = { ...where.foundedYear, lte: parseInt(maxYear) }
-
-  const [companies, total] = await Promise.all([
-    prisma.company.findMany({ where, skip, take: limit, orderBy: { name: 'asc' } }),
-    prisma.company.count({ where }),
-  ])
-
-  // Log activity
-  if (session.id) {
-    await prisma.activityLog.create({
-      data: { userId: session.id, action: 'search', metadata: JSON.stringify({ query, provincia, ccaa, cnae }) },
+    andConditions.push({
+      OR: [
+        { name: { contains: query, mode: 'insensitive' } },
+        { cif: { contains: query, mode: 'insensitive' } },
+        { city: { contains: query, mode: 'insensitive' } },
+      ]
     })
   }
+  if (provincia) andConditions.push({ provincia: { contains: provincia, mode: 'insensitive' } })
+  if (ccaa) andConditions.push({ ccaa: { contains: ccaa, mode: 'insensitive' } })
+  if (cnae) {
+    andConditions.push({
+      OR: [
+        { cnaeDescription: { contains: cnae, mode: 'insensitive' } },
+        { cnaeCode: { contains: cnae, mode: 'insensitive' } },
+      ]
+    })
+  }
+  if (minEmployees || maxEmployees) {
+    const emp: Record<string, number> = {}
+    if (minEmployees) emp.gte = parseInt(minEmployees)
+    if (maxEmployees) emp.lte = parseInt(maxEmployees)
+    andConditions.push({ employees: emp })
+  }
+  if (minRevenue || maxRevenue) {
+    const rev: Record<string, number> = {}
+    if (minRevenue) rev.gte = parseFloat(minRevenue)
+    if (maxRevenue) rev.lte = parseFloat(maxRevenue)
+    andConditions.push({ revenue: rev })
+  }
+  if (minYear || maxYear) {
+    const yr: Record<string, number> = {}
+    if (minYear) yr.gte = parseInt(minYear)
+    if (maxYear) yr.lte = parseInt(maxYear)
+    andConditions.push({ foundedYear: yr })
+  }
 
-  return NextResponse.json({ companies, total, page, limit, pages: Math.ceil(total / limit) })
+  const where = andConditions.length > 0 ? { AND: andConditions } : {}
+
+  try {
+    const [companies, total] = await Promise.all([
+      prisma.company.findMany({ where, skip, take: limit, orderBy: { name: 'asc' } }),
+      prisma.company.count({ where }),
+    ])
+
+    // Log activity (fire and forget)
+    if (session.id) {
+      prisma.activityLog.create({
+        data: { userId: session.id, action: 'search', metadata: JSON.stringify({ query, provincia, ccaa, cnae }) },
+      }).catch(() => {})
+    }
+
+    return NextResponse.json({ companies, total, page, limit, pages: Math.ceil(total / limit) })
+  } catch (e) {
+    console.error('Companies search error:', e)
+    return NextResponse.json({ error: 'Error en la búsqueda' }, { status: 500 })
+  }
 }

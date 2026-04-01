@@ -39,7 +39,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/dashboard").then(r => r.json()).then(setData).catch(console.error).finally(() => setLoading(false));
+    fetch("/api/dashboard").then(r => {
+      if (r.status === 401) { window.location.href = "/auth/login"; return null; }
+      return r.json();
+    }).then(data => { if (data) setData(data); }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   return (

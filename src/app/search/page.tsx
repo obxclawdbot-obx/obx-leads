@@ -42,6 +42,10 @@ export default function SearchPage() {
     params.set("limit", "10");
     try {
       const r = await fetch(`/api/companies?${params}`);
+      if (r.status === 401) {
+        window.location.href = "/auth/login";
+        return;
+      }
       const data = await r.json();
       setResult(data);
       setPage(p);
@@ -61,6 +65,7 @@ export default function SearchPage() {
     if (filters.minEmployees) params.set("minEmployees", filters.minEmployees);
     if (filters.maxEmployees) params.set("maxEmployees", filters.maxEmployees);
     const r = await fetch(`/api/export?${params}`);
+    if (r.status === 401) { window.location.href = "/auth/login"; return; }
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

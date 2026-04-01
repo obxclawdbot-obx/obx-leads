@@ -1,15 +1,8 @@
-// @ts-nocheck
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
 
-async function getUserId() {
-  const session = await getSession()
-  if (!session) return null
-  return session.id || null
-}
-
-function buildCsv(companies: any[]) {
+function buildCsv(companies: Array<Record<string, unknown>>) {
   const headers = ['CIF', 'Nombre', 'Ciudad', 'Provincia', 'Sector', 'Empleados', 'Email', 'Teléfono', 'Web']
   const rows = companies.map(c => [
     c.cif || '',
@@ -27,8 +20,8 @@ function buildCsv(companies: any[]) {
 }
 
 export async function GET(req: Request) {
-  const userId = await getUserId()
-  if (!userId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  const session = await getSession()
+  if (!session?.id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const query = searchParams.get('query') || searchParams.get('q') || ''
@@ -37,63 +30,77 @@ export async function GET(req: Request) {
   const minEmployees = searchParams.get('minEmployees') || ''
   const maxEmployees = searchParams.get('maxEmployees') || ''
 
-  const where: any = {}
+  const where: Record<string, unknown> = {}
   if (query) {
     where.OR = [
-      { name: { contains: query } },
-      { cif: { contains: query } },
+      { name: { contains: query, mode: 'insensitive' } },
+      { cif: { contains: query, mode: 'insensitive' } },
     ]
   }
-  if (provincia) where.provincia = { contains: provincia }
-  if (cnae) where.cnaeDescription = { contains: cnae }
-  if (minEmployees) where.employees = { ...where.employees, gte: parseInt(minEmployees) }
-  if (maxEmployees) where.employees = { ...where.employees, lte: parseInt(maxEmployees) }
+  if (provincia) where.provincia = { contains: provincia, mode: 'insensitive' }
+  if (cnae) where.cnaeDescription = { contains: cnae, mode: 'insensitive' }
+  if (minEmployees || maxEmployees) {
+    const emp: Record<string, number> = {}
+    if (minEmployees) emp.gte = parseInt(minEmployees)
+    if (maxEmployees) emp.lte = parseInt(maxEmployees)
+    where.employees = emp
+  }
 
-  const companies = await prisma.company.findMany({ where, orderBy: { name: 'asc' }, take: 5000 })
-  const csv = buildCsv(companies)
+  try {
+    const companies = await prisma.company.findMany({ where, orderBy: { name: 'asc' }, take: 5000 })
+    const csv = buildCsv(companies as unknown as Array<Record<string, unknown>>)
 
-  await prisma.exportLog.create({
-    data: { userId, type: 'search', count: companies.length },
-  })
+    prisma.exportLog.create({
+      data: { userId: session.id, type: 'search', count: companies.length },
+    }).catch(() => {})
 
-  return new NextResponse(csv, {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="obx-leads-export-${Date.now()}.csv"`,
-    },
-  })
+    return new NextResponse(csv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="obx-leads-export-${Date.now()}.csv"`,
+      },
+    })
+  } catch (e) {
+    console.error('Export error:', e)
+    return NextResponse.json({ error: 'Error en la exportación' }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
-  const userId = await getUserId()
-  if (!userId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  const session = await getSession()
+  if (!session?.id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   const { type, listId, companyIds } = await req.json()
 
-  let companies
-  if (type === 'list' && listId) {
-    const list = await prisma.list.findFirst({
-      where: { id: listId, userId },
-      include: { companies: { include: { company: true } } },
+  try {
+    let companies: Array<Record<string, unknown>>
+    if (type === 'list' && listId) {
+      const list = await prisma.list.findFirst({
+        where: { id: listId, userId: session.id },
+        include: { companies: { include: { company: true } } },
+      })
+      if (!list) return NextResponse.json({ error: 'Lista no encontrada' }, { status: 404 })
+      companies = list.companies.map((lc) => lc.company as unknown as Record<string, unknown>)
+    } else if (companyIds?.length) {
+      companies = await prisma.company.findMany({ where: { id: { in: companyIds } } }) as unknown as Array<Record<string, unknown>>
+    } else {
+      return NextResponse.json({ error: 'Parámetros inválidos' }, { status: 400 })
+    }
+
+    const csv = buildCsv(companies)
+
+    prisma.exportLog.create({
+      data: { userId: session.id, type: type || 'search', count: companies.length },
+    }).catch(() => {})
+
+    return new NextResponse(csv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="obx-leads-export-${Date.now()}.csv"`,
+      },
     })
-    if (!list) return NextResponse.json({ error: 'Lista no encontrada' }, { status: 404 })
-    companies = list.companies.map((lc: any) => lc.company)
-  } else if (companyIds?.length) {
-    companies = await prisma.company.findMany({ where: { id: { in: companyIds } } })
-  } else {
-    return NextResponse.json({ error: 'Parámetros inválidos' }, { status: 400 })
+  } catch (e) {
+    console.error('Export POST error:', e)
+    return NextResponse.json({ error: 'Error en la exportación' }, { status: 500 })
   }
-
-  const csv = buildCsv(companies)
-
-  await prisma.exportLog.create({
-    data: { userId, type: type || 'search', count: companies.length },
-  })
-
-  return new NextResponse(csv, {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="obx-leads-export-${Date.now()}.csv"`,
-    },
-  })
 }

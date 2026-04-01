@@ -55,7 +55,10 @@ export default function CompanyPage() {
   const [addedMsg, setAddedMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/companies/${id}`).then(r => r.json()).then(setCompany).catch(console.error).finally(() => setLoading(false));
+    fetch(`/api/companies/${id}`).then(r => {
+      if (r.status === 401) { window.location.href = "/auth/login"; return null; }
+      return r.json();
+    }).then(data => { if (data) setCompany(data); }).catch(console.error).finally(() => setLoading(false));
   }, [id]);
 
   const openListMenu = async () => {

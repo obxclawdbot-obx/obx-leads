@@ -7,6 +7,7 @@ export interface SessionUser {
   id: string;
   email: string;
   name: string;
+  plan: string;
 }
 
 export async function getSession(): Promise<SessionUser | null> {
@@ -15,7 +16,10 @@ export async function getSession(): Promise<SessionUser | null> {
     const token = cookieStore.get("session-token")?.value;
     if (!token) return null;
     const { payload } = await jwtVerify(token, SECRET);
-    return payload as unknown as SessionUser;
+    const user = payload as unknown as SessionUser;
+    // Default plan if not in token
+    if (!user.plan) user.plan = "starter";
+    return user;
   } catch {
     return null;
   }

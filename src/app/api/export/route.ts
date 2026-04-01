@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
+import { getExportLimit } from '@/lib/plans'
 
 function buildCsv(companies: Array<Record<string, unknown>>) {
   const headers = ['CIF', 'Nombre', 'Ciudad', 'Provincia', 'Sector', 'Empleados', 'Email', 'Teléfono', 'Web']
@@ -17,6 +18,25 @@ function buildCsv(companies: Array<Record<string, unknown>>) {
   ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'))
 
   return [headers.join(';'), ...rows].join('\n')
+}
+
+async function checkExportLimit(userId: string, plan: string, count: number): Promise<string | null> {
+  const limit = getExportLimit(plan);
+  if (limit === -1) return null; // unlimited
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const used = await prisma.exportLog.aggregate({
+    where: { userId, createdAt: { gte: startOfMonth } },
+    _sum: { count: true },
+  });
+
+  const totalUsed = (used._sum.count || 0) + count;
+  if (totalUsed > limit) {
+    return `Límite de exportación alcanzado (${used._sum.count || 0}/${limit} este mes). Upgrade tu plan.`;
+  }
+  return null;
 }
 
 export async function GET(req: Request) {
@@ -48,6 +68,13 @@ export async function GET(req: Request) {
 
   try {
     const companies = await prisma.company.findMany({ where, orderBy: { name: 'asc' }, take: 5000 })
+
+    // Check export limit
+    const limitErr = await checkExportLimit(session.id, session.plan || 'starter', companies.length);
+    if (limitErr) {
+      return NextResponse.json({ error: limitErr }, { status: 403 });
+    }
+
     const csv = buildCsv(companies as unknown as Array<Record<string, unknown>>)
 
     prisma.exportLog.create({
@@ -85,6 +112,12 @@ export async function POST(req: Request) {
       companies = await prisma.company.findMany({ where: { id: { in: companyIds } } }) as unknown as Array<Record<string, unknown>>
     } else {
       return NextResponse.json({ error: 'Parámetros inválidos' }, { status: 400 })
+    }
+
+    // Check export limit
+    const limitErr = await checkExportLimit(session.id, session.plan || 'starter', companies.length);
+    if (limitErr) {
+      return NextResponse.json({ error: limitErr }, { status: 403 });
     }
 
     const csv = buildCsv(companies)

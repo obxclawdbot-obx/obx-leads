@@ -1,0 +1,33 @@
+export const PROVINCIAS = [
+  "A Coruña", "Álava", "Albacete", "Alicante", "Almería", "Asturias",
+  "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", "Cádiz",
+  "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "Cuenca",
+  "Girona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", "Huesca",
+  "Illes Balears", "Jaén", "La Rioja", "Las Palmas", "León", "Lleida",
+  "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Ourense", "Palencia",
+  "Pontevedra", "Salamanca", "Santa Cruz de Tenerife", "Segovia",
+  "Sevilla", "Soria", "Tarragona", "Teruel", "Toledo", "Valencia",
+  "Valladolid", "Vizcaya", "Zamora", "Zaragoza",
+];
+
+export const CNAE_SECTORS = [
+  "Agricultura, ganadería, silvicultura y pesca",
+  "Industrias extractivas",
+  "Industria manufacturera",
+  "Suministro de energía eléctrica, gas, vapor",
+  "Suministro de agua, saneamiento",
+  "Construcción",
+  "Comercio al por mayor y al por menor",
+  "Transporte y almacenamiento",
+  "Hostelería",
+  "Información y comunicaciones",
+  "Actividades financieras y de seguros",
+  "Actividades inmobiliarias",
+  "Actividades profesionales, científicas y técnicas",
+  "Actividades administrativas y servicios auxiliares",
+  "Administración pública y defensa",
+  "Educación",
+  "Actividades sanitarias y de servicios sociales",
+  "Actividades artísticas, recreativas",
+  "Otros servicios",
+];

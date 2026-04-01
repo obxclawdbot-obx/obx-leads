@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
+      plan: user.plan || "starter",
     })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("7d")

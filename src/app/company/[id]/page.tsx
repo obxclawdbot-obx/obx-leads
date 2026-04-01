@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { useUser } from "@/hooks/useUser";
+import { canSeeFullInfo } from "@/lib/plans";
+import { LockedField } from "@/components/UpgradeCTA";
 
 interface Company {
   id: string;
@@ -33,26 +36,28 @@ interface ListItem {
   name: string;
 }
 
-const BADGE_COLORS = [
-  "bg-blue-100 text-blue-800",
-  "bg-emerald-100 text-emerald-800",
-  "bg-purple-100 text-purple-800",
-  "bg-amber-100 text-amber-800",
-  "bg-rose-100 text-rose-800",
-  "bg-cyan-100 text-cyan-800",
-  "bg-indigo-100 text-indigo-800",
-  "bg-orange-100 text-orange-800",
-  "bg-teal-100 text-teal-800",
-  "bg-pink-100 text-pink-800",
+const TECH_COLORS = [
+  "bg-[#00ff88]/10 text-[#00ff88]",
+  "bg-[#00ccff]/10 text-[#00ccff]",
+  "bg-[#c084fc]/10 text-[#c084fc]",
+  "bg-[#ffd700]/10 text-[#ffd700]",
+  "bg-[#ff6b6b]/10 text-[#ff6b6b]",
+  "bg-[#34d399]/10 text-[#34d399]",
+  "bg-[#60a5fa]/10 text-[#60a5fa]",
+  "bg-[#fb923c]/10 text-[#fb923c]",
 ];
 
 export default function CompanyPage() {
   const { id } = useParams();
+  const { user } = useUser();
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [lists, setLists] = useState<ListItem[]>([]);
   const [showListMenu, setShowListMenu] = useState(false);
   const [addedMsg, setAddedMsg] = useState<string | null>(null);
+
+  const plan = user?.plan || "starter";
+  const fullInfo = canSeeFullInfo(plan);
 
   useEffect(() => {
     fetch(`/api/companies/${id}`).then(r => {
@@ -91,48 +96,68 @@ export default function CompanyPage() {
     setTimeout(() => setAddedMsg(null), 3000);
   };
 
-  if (loading) return <div className="flex min-h-screen"><Sidebar /><main className="flex-1 p-8 bg-gray-50"><div className="animate-pulse text-gray-500">Cargando...</div></main></div>;
-  if (!company) return <div className="flex min-h-screen"><Sidebar /><main className="flex-1 p-8 bg-gray-50"><p className="text-red-500">Empresa no encontrada</p></main></div>;
+  if (loading) return (
+    <div className="flex min-h-screen bg-[#0a0a0a]">
+      <Sidebar />
+      <main className="flex-1 p-8"><div className="text-[#555] animate-pulse">Cargando...</div></main>
+    </div>
+  );
+
+  if (!company) return (
+    <div className="flex min-h-screen bg-[#0a0a0a]">
+      <Sidebar />
+      <main className="flex-1 p-8"><p className="text-red-400">Empresa no encontrada</p></main>
+    </div>
+  );
 
   let techStack: string[] = [];
   try { techStack = company.techStack ? JSON.parse(company.techStack) : []; } catch { techStack = []; }
 
   const Field = ({ label, value }: { label: string; value: string | number | null | undefined }) => value ? (
     <div>
-      <p className="text-xs font-medium text-gray-500 uppercase">{label}</p>
-      <p className="text-sm text-gray-900 mt-0.5">{value}</p>
+      <p className="text-xs font-medium text-[#555] uppercase tracking-wider">{label}</p>
+      <p className="text-sm text-[#ccc] mt-0.5">{value}</p>
     </div>
   ) : null;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
-      <main className="flex-1 p-8 bg-gray-50">
-        <Link href="/search" className="text-sm text-emerald-600 hover:underline mb-4 inline-block">← Volver a búsqueda</Link>
-        <div className="bg-white rounded-xl shadow-sm border p-8 mb-6">
+      <main className="flex-1 p-8">
+        <Link href="/search" className="text-sm text-[#00ff88] hover:underline mb-4 inline-flex items-center gap-1">
+          ← Volver a búsqueda
+        </Link>
+
+        {/* Header card */}
+        <div className="bg-[#181818] border border-[#222] rounded-2xl p-6 mb-6">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
-              <p className="text-sm text-gray-500 mt-1">{company.legalForm} · CIF {company.cif}</p>
+              <h1 className="text-2xl font-bold text-[#f0f0f0]">{company.name}</h1>
+              <p className="text-sm text-[#555] mt-1">
+                {company.legalForm && <span>{company.legalForm} · </span>}
+                <span className="font-mono">CIF {company.cif}</span>
+              </p>
             </div>
-            <div className="flex gap-2 items-start">
-              {/* Añadir a lista dropdown */}
+            <div className="flex gap-2 items-start shrink-0 ml-4">
               <div className="relative">
-                <button onClick={openListMenu} className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                  📋 Añadir a lista
+                <button
+                  onClick={openListMenu}
+                  className="px-4 py-2 text-sm bg-[#00ff88] text-[#0a0a0a] rounded-xl font-semibold hover:bg-[#00e07a] transition-colors"
+                >
+                  + Lista
                 </button>
                 {showListMenu && (
-                  <div className="absolute right-0 mt-1 w-56 bg-white border rounded-lg shadow-lg z-10">
+                  <div className="absolute right-0 mt-1 w-56 bg-[#181818] border border-[#333] rounded-xl shadow-2xl z-10 overflow-hidden">
                     {lists.length === 0 ? (
-                      <div className="p-3 text-sm text-gray-500">
-                        No tienes listas. <Link href="/lists" className="text-emerald-600 underline">Crear una</Link>
+                      <div className="p-3 text-sm text-[#555]">
+                        Sin listas. <Link href="/lists" className="text-[#00ff88] underline">Crear una</Link>
                       </div>
                     ) : (
                       lists.map(l => (
                         <button
                           key={l.id}
                           onClick={() => addToList(l.id, l.name)}
-                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b last:border-b-0"
+                          className="w-full text-left px-4 py-2.5 text-sm text-[#ccc] hover:bg-[#222] border-b border-[#222] last:border-b-0 transition-colors"
                         >
                           {l.name}
                         </button>
@@ -141,69 +166,125 @@ export default function CompanyPage() {
                   </div>
                 )}
               </div>
-              {company.website && (
-                <a href={company.website.startsWith("http") ? company.website : `https://${company.website}`} target="_blank" className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900">🌐 Web</a>
+              {company.website && fullInfo && (
+                <a
+                  href={company.website.startsWith("http") ? company.website : `https://${company.website}`}
+                  target="_blank"
+                  className="px-4 py-2 text-sm border border-[#333] text-[#888] rounded-xl hover:text-white hover:border-[#555] transition-colors"
+                >
+                  🌐 Web
+                </a>
               )}
             </div>
           </div>
           {addedMsg && (
-            <div className="mt-3 px-3 py-2 bg-emerald-50 text-emerald-700 text-sm rounded-lg">{addedMsg}</div>
+            <div className="mt-3 px-3 py-2 bg-[#00ff88]/10 text-[#00ff88] text-sm rounded-lg">{addedMsg}</div>
           )}
-          {company.description && <p className="text-sm text-gray-700 mt-4">{company.description}</p>}
+          {company.description && <p className="text-sm text-[#888] mt-4 leading-relaxed">{company.description}</p>}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Datos generales</h2>
+          {/* Datos generales - always visible */}
+          <div className="bg-[#181818] border border-[#222] rounded-2xl p-6">
+            <h2 className="text-base font-semibold text-[#f0f0f0] mb-4">Datos generales</h2>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Sector CNAE" value={company.cnaeCode ? `${company.cnaeCode} — ${company.cnaeDescription}` : company.cnaeDescription} />
               <Field label="Empleados" value={company.employees} />
-              <Field label="Facturación" value={company.revenue ? `${(company.revenue / 1e6).toFixed(1)}M €` : null} />
+              {fullInfo ? (
+                <Field label="Facturación" value={company.revenue ? `${(company.revenue / 1e6).toFixed(1)}M €` : null} />
+              ) : company.revenue ? (
+                <LockedField label="Facturación" requiredPlan="Growth" />
+              ) : null}
               <Field label="Fundada" value={company.foundedYear} />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Ubicación</h2>
+          {/* Ubicación - always visible */}
+          <div className="bg-[#181818] border border-[#222] rounded-2xl p-6">
+            <h2 className="text-base font-semibold text-[#f0f0f0] mb-4">Ubicación</h2>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Dirección" value={company.address} />
-              <Field label="Código postal" value={company.postalCode} />
               <Field label="Ciudad" value={company.city} />
               <Field label="Provincia" value={company.provincia} />
               <Field label="CCAA" value={company.ccaa} />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Contacto</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <Field label="Email" value={company.email} />
-              <Field label="Teléfono" value={company.phone} />
-              {company.linkedinUrl && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase">LinkedIn</p>
-                  <a href={company.linkedinUrl} target="_blank" className="text-sm text-blue-600 hover:underline mt-0.5 block">{company.linkedinUrl}</a>
-                </div>
-              )}
-              {company.twitterUrl && (
-                <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase">Twitter</p>
-                  <a href={company.twitterUrl} target="_blank" className="text-sm text-blue-600 hover:underline mt-0.5 block">{company.twitterUrl}</a>
-                </div>
+              {fullInfo ? (
+                <>
+                  <Field label="Dirección" value={company.address} />
+                  <Field label="Código postal" value={company.postalCode} />
+                </>
+              ) : (
+                <>
+                  {company.address && <LockedField label="Dirección" requiredPlan="Growth" />}
+                  {company.postalCode && <LockedField label="Código postal" requiredPlan="Growth" />}
+                </>
               )}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Tech Stack detectado</h2>
-            {techStack.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {techStack.map((t: string, i: number) => (
-                  <span key={t} className={`px-3 py-1 rounded-full text-sm font-medium ${BADGE_COLORS[i % BADGE_COLORS.length]}`}>{t}</span>
-                ))}
+          {/* Contacto - gated */}
+          <div className="bg-[#181818] border border-[#222] rounded-2xl p-6">
+            <h2 className="text-base font-semibold text-[#f0f0f0] mb-4">Contacto</h2>
+            {fullInfo ? (
+              <div className="grid grid-cols-1 gap-4">
+                <Field label="Email" value={company.email} />
+                <Field label="Teléfono" value={company.phone} />
+                {company.linkedinUrl && (
+                  <div>
+                    <p className="text-xs font-medium text-[#555] uppercase tracking-wider">LinkedIn</p>
+                    <a href={company.linkedinUrl} target="_blank" className="text-sm text-[#00ff88] hover:underline mt-0.5 block truncate">{company.linkedinUrl}</a>
+                  </div>
+                )}
+                {company.twitterUrl && (
+                  <div>
+                    <p className="text-xs font-medium text-[#555] uppercase tracking-wider">Twitter</p>
+                    <a href={company.twitterUrl} target="_blank" className="text-sm text-[#00ff88] hover:underline mt-0.5 block truncate">{company.twitterUrl}</a>
+                  </div>
+                )}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">Sin datos de tech stack</p>
+              <div className="space-y-4">
+                {company.email && <LockedField label="Email" requiredPlan="Growth" />}
+                {company.phone && <LockedField label="Teléfono" requiredPlan="Growth" />}
+                {company.linkedinUrl && <LockedField label="LinkedIn" requiredPlan="Growth" />}
+                {!company.email && !company.phone && !company.linkedinUrl && (
+                  <p className="text-sm text-[#555]">Sin datos de contacto</p>
+                )}
+                <div className="bg-[#00ff88]/5 border border-[#00ff88]/20 rounded-xl p-3 text-center mt-4">
+                  <p className="text-xs text-[#888] mb-2">Accede a email, teléfono y LinkedIn</p>
+                  <button className="text-xs bg-[#00ff88] text-[#0a0a0a] px-4 py-1.5 rounded-lg font-semibold hover:bg-[#00e07a] transition-colors">
+                    Upgrade a Growth →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tech Stack - gated */}
+          <div className="bg-[#181818] border border-[#222] rounded-2xl p-6">
+            <h2 className="text-base font-semibold text-[#f0f0f0] mb-4">Tech Stack detectado</h2>
+            {fullInfo ? (
+              techStack.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {techStack.map((t: string, i: number) => (
+                    <span key={t} className={`px-3 py-1.5 rounded-full text-sm font-medium ${TECH_COLORS[i % TECH_COLORS.length]}`}>{t}</span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-[#555]">Sin datos de tech stack</p>
+              )
+            ) : (
+              <div>
+                <div className="flex flex-wrap gap-2 blur-[4px] select-none pointer-events-none">
+                  <span className="px-3 py-1.5 rounded-full text-sm bg-[#00ff88]/10 text-[#00ff88]">React</span>
+                  <span className="px-3 py-1.5 rounded-full text-sm bg-[#00ccff]/10 text-[#00ccff]">Node.js</span>
+                  <span className="px-3 py-1.5 rounded-full text-sm bg-[#c084fc]/10 text-[#c084fc]">AWS</span>
+                </div>
+                <div className="bg-[#00ff88]/5 border border-[#00ff88]/20 rounded-xl p-3 text-center mt-4">
+                  <p className="text-xs text-[#888] mb-2">Tech stack disponible en Growth</p>
+                  <button className="text-xs bg-[#00ff88] text-[#0a0a0a] px-4 py-1.5 rounded-lg font-semibold hover:bg-[#00e07a] transition-colors">
+                    Upgrade →
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

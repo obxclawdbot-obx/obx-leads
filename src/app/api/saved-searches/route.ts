@@ -31,3 +31,15 @@ export async function POST(req: Request) {
   })
   return NextResponse.json(search, { status: 201 })
 }
+
+export async function DELETE(req: Request) {
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
+
+  await prisma.savedSearch.deleteMany({ where: { id, userId } })
+  return NextResponse.json({ ok: true })
+}

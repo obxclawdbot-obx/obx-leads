@@ -3,31 +3,79 @@ import Image from "next/image";
 import FaqItem from "./components/FaqItem";
 
 const features = [
-  { icon: "🔍", title: "Búsqueda avanzada", desc: "Filtra por provincia, sector CNAE, tamaño, facturación y más." },
-  { icon: "📊", title: "Datos enriquecidos", desc: "CIF, dirección, empleados, facturación, web, email, teléfono, redes sociales." },
-  { icon: "💻", title: "Tech stack", desc: "Detectamos las tecnologías que usa cada empresa (frameworks, CMS, cloud)." },
-  { icon: "📋", title: "Listas personalizadas", desc: "Organiza tus leads en listas para campañas de outreach." },
-  { icon: "📥", title: "Exportación CSV", desc: "Descarga tus búsquedas y listas en CSV listo para tu CRM." },
-  { icon: "🔄", title: "Datos actualizados", desc: "Fuentes públicas verificadas, actualización continua desde BORME y Registro Mercantil." },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-[#00ff88]">
+        <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l4 4"/>
+      </svg>
+    ),
+    title: "Búsqueda avanzada",
+    desc: "Filtra por provincia, sector CNAE, tamaño, facturación y más.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-[#00ff88]">
+        <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+      </svg>
+    ),
+    title: "Datos enriquecidos",
+    desc: "CIF, dirección, empleados, facturación, web, email, teléfono, redes sociales.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-[#00ff88]">
+        <path d="M2 12V4l6-2 6 2v8l-6 2-6-2z"/><path d="M8 2v12M2 4l6 2 6-2"/>
+      </svg>
+    ),
+    title: "Tech stack",
+    desc: "Detectamos las tecnologías que usa cada empresa (frameworks, CMS, cloud).",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-[#00ff88]">
+        <rect x="2" y="1" width="12" height="14" rx="1.5"/><path d="M5 4h6M5 7h6M5 10h3"/>
+      </svg>
+    ),
+    title: "Listas personalizadas",
+    desc: "Organiza tus leads en listas para campañas de outreach.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-[#00ff88]">
+        <path d="M8 1v10M4 7l4 4 4-4"/><path d="M2 12v2h12v-2"/>
+      </svg>
+    ),
+    title: "Exportación CSV",
+    desc: "Descarga tus búsquedas y listas en CSV listo para tu CRM.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-[#00ff88]">
+        <path d="M1 8a7 7 0 1114 0A7 7 0 011 8z"/><path d="M8 4v4l3 2"/>
+      </svg>
+    ),
+    title: "Datos actualizados",
+    desc: "Fuentes públicas verificadas, actualización continua desde BORME y Registro Mercantil.",
+  },
 ];
 
 const plans = [
   {
     name: "Starter",
-    price: "79",
-    features: ["100 exports/mes", "5 listas", "Búsqueda básica", "Soporte email"],
+    price: "39",
+    features: ["50 exports/mes", "3 listas", "Búsqueda por texto", "Info básica (nombre, CIF, ciudad, sector)"],
     recommended: false,
   },
   {
     name: "Growth",
-    price: "149",
-    features: ["1.000 exports/mes", "Listas ilimitadas", "Filtros avanzados", "API access", "Soporte prioritario"],
+    price: "99",
+    features: ["500 exports/mes", "Listas ilimitadas", "Filtros avanzados (CNAE, provincia, empleados)", "Info completa (email, web, teléfono, LinkedIn)", "Soporte prioritario"],
     recommended: true,
   },
   {
-    name: "Enterprise",
+    name: "Business",
     price: "199",
-    features: ["Exports ilimitados", "Datos exclusivos", "Integraciones CRM", "Soporte dedicado", "SLA"],
+    features: ["Exports ilimitados", "Todo lo de Growth", "Filtro por tech stack", "Acceso API", "Alertas de nuevas empresas"],
     recommended: false,
   },
 ];
@@ -43,7 +91,7 @@ const faqs = [
   },
   {
     q: "¿Puedo integrar OBX Leads con mi CRM?",
-    a: "Sí. Puedes exportar en CSV compatible con cualquier CRM. Los planes Growth y Enterprise incluyen acceso API para integraciones directas.",
+    a: "Sí. Puedes exportar en CSV compatible con cualquier CRM. Los planes Growth y Business incluyen acceso API para integraciones directas.",
   },
   {
     q: "¿Con qué frecuencia se actualizan los datos?",
@@ -76,20 +124,24 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="px-4 sm:px-8 pt-16 sm:pt-24 pb-12 sm:pb-16 text-center">
-        <div className="max-w-[800px] mx-auto">
-          <h1 className="text-2xl sm:text-[30.4px] font-light leading-snug mb-5">
+      <section className="px-4 sm:px-8 pt-16 sm:pt-24 pb-12 sm:pb-16 text-center relative overflow-hidden">
+        {/* Gradient glow behind hero */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse_at_center,_rgba(0,255,136,0.05)_0%,_transparent_70%)] pointer-events-none" />
+        <div className="max-w-[800px] mx-auto relative">
+          <h1 className="text-2xl sm:text-[30.4px] font-light leading-snug mb-5 animate-in">
             La base de datos <span className="text-[#00ff88]">B2B de empresas españolas</span>
           </h1>
-          <p className="text-base sm:text-[17px] text-[#bbbbbb] leading-relaxed mb-8 sm:mb-9 max-w-[640px] mx-auto">
+          <p className="text-base sm:text-[17px] text-[#bbbbbb] leading-relaxed mb-8 sm:mb-9 max-w-[640px] mx-auto animate-in-delay-1">
             Busca, filtra y exporta información de miles de empresas en España. Datos enriquecidos con tecnología, contactos y sector. Tu equipo comercial, potenciado.
           </p>
-          <Link
-            href="/auth/login"
-            className="inline-block px-8 sm:px-9 py-3.5 bg-[#00ff88] text-[#060606] rounded-xl text-base font-semibold hover:bg-[#00e07a] transition-colors"
-          >
-            Empieza gratis →
-          </Link>
+          <div className="animate-in-delay-2">
+            <Link
+              href="/auth/login"
+              className="inline-block px-8 sm:px-9 py-3.5 bg-[#00ff88] text-[#060606] rounded-xl text-base font-semibold hover:bg-[#00e07a] transition-colors"
+            >
+              Empieza gratis →
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -103,7 +155,7 @@ export default function LandingPage() {
             { value: "CSV", label: "export" },
           ].map((s) => (
             <div key={s.label}>
-              <p className="text-2xl sm:text-[28px] font-semibold text-[#00ff88]">{s.value}</p>
+              <p className="text-2xl sm:text-[28px] font-semibold text-[#00ff88] font-mono">{s.value}</p>
               <p className="text-xs sm:text-[13px] text-[#666666] mt-1">{s.label}</p>
             </div>
           ))}
@@ -123,9 +175,9 @@ export default function LandingPage() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="bg-[#181818] rounded-2xl p-7 sm:p-9 border border-[#181818] hover:border-[#00ff88]/30 transition-colors"
+                className="bg-[#181818] rounded-2xl p-7 sm:p-9 border border-[#181818] hover:border-[#00ff88]/30 transition-all card-hover"
               >
-                <span className="text-3xl block mb-4">{f.icon}</span>
+                <span className="block mb-4">{f.icon}</span>
                 <h3 className="text-[17px] font-semibold mb-2">{f.title}</h3>
                 <p className="text-sm text-[#bbbbbb] leading-relaxed">{f.desc}</p>
               </div>
@@ -147,8 +199,10 @@ export default function LandingPage() {
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`bg-[#0c0c0c] rounded-2xl p-7 sm:p-9 relative ${
-                  plan.recommended ? "border border-[#00ff88] sm:col-span-2 lg:col-span-1" : "border border-[#181818]"
+                className={`rounded-2xl p-7 sm:p-9 relative card-hover ${
+                  plan.recommended
+                    ? "glass border border-[#00ff88]/40 glow-green sm:col-span-2 lg:col-span-1"
+                    : "glass border border-[#222222]"
                 }`}
               >
                 {plan.recommended && (

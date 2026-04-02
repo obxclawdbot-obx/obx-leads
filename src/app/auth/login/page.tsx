@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -39,16 +40,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-      <div className="w-full max-w-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] bg-grid">
+      <div className="w-full max-w-md p-8 animate-in">
         <div className="text-center mb-8">
+          <Image src="/obx-logo.png" alt="OBX" width={48} height={48} className="mx-auto mb-3 rounded-lg" />
           <h1 className="text-3xl font-bold text-white">
             OBX <span className="text-[#00ff88]">Leads</span>
           </h1>
           <p className="text-[#555] mt-2">Base de datos B2B España</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#181818] border border-[#222] rounded-2xl p-6">
+        <form onSubmit={handleSubmit} className="bg-[#181818] border border-[#222] rounded-2xl p-6 glass">
           <h2 className="text-xl font-semibold text-white mb-6">Iniciar sesión</h2>
 
           {error && (

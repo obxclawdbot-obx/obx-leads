@@ -1,4 +1,4 @@
-export type PlanType = "starter" | "growth" | "enterprise";
+export type PlanType = "starter" | "growth" | "business";
 
 export interface PlanConfig {
   name: string;
@@ -16,8 +16,8 @@ export interface PlanConfig {
 export const PLANS: Record<PlanType, PlanConfig> = {
   starter: {
     name: "Starter",
-    price: 79,
-    exportsPerMonth: 100,
+    price: 39,
+    exportsPerMonth: 50,
     maxLists: 3,
     advancedSearch: false,
     techStackFilter: false,
@@ -25,7 +25,7 @@ export const PLANS: Record<PlanType, PlanConfig> = {
     apiAccess: false,
     alerts: false,
     features: [
-      "100 exportaciones/mes",
+      "50 exportaciones/mes",
       "Búsqueda por texto",
       "3 listas máximo",
       "Info básica (nombre, CIF, ciudad, sector)",
@@ -33,8 +33,8 @@ export const PLANS: Record<PlanType, PlanConfig> = {
   },
   growth: {
     name: "Growth",
-    price: 149,
-    exportsPerMonth: 1000,
+    price: 99,
+    exportsPerMonth: 500,
     maxLists: -1,
     advancedSearch: true,
     techStackFilter: false,
@@ -42,14 +42,14 @@ export const PLANS: Record<PlanType, PlanConfig> = {
     apiAccess: false,
     alerts: false,
     features: [
-      "1.000 exportaciones/mes",
+      "500 exportaciones/mes",
       "Búsqueda avanzada (CNAE, provincia, empleados, facturación)",
       "Listas ilimitadas",
       "Info completa (email, web, teléfono, LinkedIn, tech stack)",
     ],
   },
-  enterprise: {
-    name: "Enterprise",
+  business: {
+    name: "Business",
     price: 199,
     exportsPerMonth: -1,
     maxLists: -1,

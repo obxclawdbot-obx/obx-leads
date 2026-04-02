@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -48,8 +49,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] bg-grid p-4">
+      <div className="w-full max-w-md animate-in">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">
             OBX <span className="text-[#00ff88]">Leads</span>
@@ -57,7 +58,7 @@ export default function RegisterPage() {
           <p className="text-[#555] mt-2">Crea tu cuenta</p>
         </div>
 
-        <div className="bg-[#181818] border border-[#222] rounded-2xl p-6">
+        <div className="bg-[#181818] border border-[#222] rounded-2xl p-6 glass">
           <h2 className="text-xl font-semibold text-white mb-6">Registro</h2>
 
           {error && (

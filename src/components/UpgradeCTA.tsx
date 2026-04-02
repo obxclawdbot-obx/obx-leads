@@ -1,39 +1,12 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 
 interface UpgradeCTAProps {
   feature: string;
   requiredPlan: string;
-  checkoutPlan?: "starter" | "growth" | "business";
   className?: string;
 }
 
-export function UpgradeCTA({ feature, requiredPlan, checkoutPlan, className = "" }: UpgradeCTAProps) {
-  const [loading, setLoading] = useState(false);
-
-  async function handleUpgrade() {
-    const plan = checkoutPlan || requiredPlan.toLowerCase();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("Checkout error:", data.error);
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
+export function UpgradeCTA({ feature, requiredPlan, className = "" }: UpgradeCTAProps) {
   return (
     <div className={`relative ${className}`}>
       <div className="bg-[#181818] border border-[#222] rounded-xl p-4 text-center">
@@ -41,13 +14,12 @@ export function UpgradeCTA({ feature, requiredPlan, checkoutPlan, className = ""
         <p className="text-[#888] text-sm mb-3">
           {feature} disponible en plan <span className="text-[#00ff88] font-semibold">{requiredPlan}</span>
         </p>
-        <button
-          onClick={handleUpgrade}
-          disabled={loading}
-          className="px-4 py-2 bg-[#00ff88] text-[#0a0a0a] rounded-lg text-sm font-semibold hover:bg-[#00e07a] transition-colors disabled:opacity-50"
+        <Link
+          href="/pricing#contacto"
+          className="inline-block px-4 py-2 bg-[#00ff88] text-[#0a0a0a] rounded-lg text-sm font-semibold hover:bg-[#00e07a] transition-colors"
         >
-          {loading ? "Cargando..." : "Upgrade →"}
-        </button>
+          Contactar →
+        </Link>
       </div>
     </div>
   );

@@ -14,8 +14,6 @@ model User {
   emailVerified  DateTime?
   hashedPassword String?
   plan                  String    @default("starter")
-  stripeCustomerId      String?   @unique
-  stripeSubscriptionId  String?
   image                 String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
